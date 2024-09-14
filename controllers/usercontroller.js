@@ -6,7 +6,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { io } from "../index.js";
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -47,7 +46,6 @@ const createUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  //console.log("login user", req, res);
   const { email, password } = req.body;
   try {
     const existingUser = await user.findOne({ email });
@@ -63,8 +61,8 @@ const loginUser = async (req, res) => {
           lastname: existingUser.lastname,
           phone: existingUser.phone,
           isAdmin: existingUser.isAdmin,
-          coverImage:  existingUser.coverImage,
-          profileImage:  existingUser.profileImage
+          coverImage: existingUser.coverImage,
+          profileImage: existingUser.profileImage,
         });
       } else {
         return res.status(401).json({ error: "Invalid email or password" });
@@ -76,7 +74,7 @@ const loginUser = async (req, res) => {
     return res.status(401).json({ error: "Error Occured" });
   }
 
-  //return res.status(401).json({ error: "Invalid email or password" });
+  
 };
 
 const logoutUser = async (req, res) => {
@@ -87,26 +85,20 @@ const logoutUser = async (req, res) => {
   res.status(200).json({ message: "logout successfully" });
 };
 
-/* const getalluser = async (req, res) => {
-  const users = await user.find({});
-  res.json(users);
-}; */
-
 const getalluser = async (req, res) => {
   try {
-    // Fetch all users and populate the 'roles' field with role details
+    
     const users = await user.find({}).populate("role");
 
-    // Respond with the users including their role details
+    
     res.json(users);
   } catch (error) {
-    // Handle any errors that occur
+    
     res.status(500).json({ message: error.message });
   }
 };
 
 const getprofile = async (req, res) => {
-  console.log(req);
   const myuser = await user.findById(req.user._id);
   if (myuser) {
     res.json({
@@ -124,7 +116,7 @@ const updateUserStatus = async (req, res) => {
   const myuser = req.params.id
     ? await user.findById(req.params.id)
     : await user.findById(req.user._id);
-  //const myuser = await user.findById(req.params.id);
+  
   if (myuser) {
     myuser.status =
       myuser.status == "active"
@@ -151,21 +143,13 @@ const updateUserStatus = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  console.log("updateUser");
   const myuser = req.body.id
     ? await user.findById(req.body.id)
     : await user.findById(req.body._id);
-  //const myuser = await user.findById(req.params.id);
+  
   if (myuser) {
     myuser.username = req.body.username || myuser.username;
-    /* myuser.email = req.body.email || myuser.email;
-    myuser.firstname = req.body.firstname || myuser.firstname;
-    myuser.lastname = req.body.lastname || myuser.lastname;
-    myuser.phone = req.body.phone || myuser.phone;
-    myuser.city = req.body.city || myuser.city;
-    myuser.country = req.body.country || myuser.country;
-    myuser.timezone = req.body.timezone || myuser.timezone;
- */
+
     if (req.body.password) {
       const passvalid = await bcrypt.compare(
         req.body.currentpassword,
@@ -183,13 +167,6 @@ const updateUser = async (req, res) => {
     res.json({
       _id: updated._id,
       username: updated.username,
-      /*  email: updated.email,
-      firstname: updated.firstname,
-      lastname: updated.lastname,
-      phone: updated.phone,
-      city: updated.city,
-      country: updated.country,
-      timezone: updated.timezone, */
     });
   } else {
     res.status(404);
@@ -197,12 +174,10 @@ const updateUser = async (req, res) => {
   }
 };
 
-
 const updateCurrentUser = async (req, res) => {
   const myuser = req.params.id
     ? await user.findById(req.params.id)
     : await user.findById(req.user._id);
-  //const myuser = await user.findById(req.params.id);
   if (myuser) {
     myuser.email = req.body.email || myuser.email;
     myuser.firstname = req.body.firstname || myuser.firstname;
@@ -212,10 +187,13 @@ const updateCurrentUser = async (req, res) => {
     myuser.country = req.body.country || myuser.country;
     myuser.timezone = req.body.timezone || myuser.timezone;
     if (req.body.password) {
-      const passvalid = await bcrypt.compare(req.body.currentpassword, myuser.password);
-      if(!passvalid) { 
+      const passvalid = await bcrypt.compare(
+        req.body.currentpassword,
+        myuser.password
+      );
+      if (!passvalid) {
         res.status(400).json({ error: "Password incorrect" });
-        return
+        return;
       }
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -243,28 +221,22 @@ const getImage = async (req, res) => {
   const myuser = await user.findById(req.params.id);
   if (!myuser) {
     res.status(404).json({ message: "user not found " });
-    return
-  } 
+    return;
+  }
 
   const type = req.headers["type"];
-  const imgPath = ( type == "COVER"
-  ? (myuser.coverImage )
-  : (myuser.profileImage ))
-  const imagePath = path.join(__dirname, "."+imgPath);
-  console.log(imagePath)
-  if (!imagePath.includes('Error')) {
+  const imgPath = type == "COVER" ? myuser.coverImage : myuser.profileImage;
+  const imagePath = path.join(__dirname, "." + imgPath);
+  if (!imagePath.includes("Error")) {
     res.sendFile(imagePath);
-    return 
-  } else{ 
-
+    return;
+  } else {
     res.status(404).json({ message: "Image not found" });
   }
-  
 };
 
 const deleteUser = async (req, res) => {
   const myuser = await user.findById(req.params.id);
-  console.log("my user", myuser);
   if (myuser) {
     if (myuser.isAdmin) {
       res.status(400);
@@ -289,40 +261,13 @@ const getuserById = async (req, res) => {
 };
 
 const updateUserById = async (req, res) => {
-  console.log("updateUserById");
   const myuser = await user.findById(req.params.id);
-  console.log("myuser", myuser);
-  /* const {username,phone,roles}=req.body; */
-  /*   if (myuser) {
-    myuser.username = data.username || myuser.username;
-    
-    myuser.status=username || myuser.status;
-    myuser.phone=phone || myuser.phone;
-    myuser.roles=roles || myuser.roles;
-    
-    
-    const updateduser = await myuser.save();
-    res.json({
-      _id: updateduser._id,
-      username: updateduser.username,
-      //email: updateduser.email,
-      isAdmin: updateduser.isAdmin,
-      phone:updateduser.phone,
-      status:updateduser.status,
-      roles:updateduser.role,
-      
-      
-      });
-      } else {
-        res.status(404);
-      throw new Error("user not found  ");
-      } */
 };
 
-// Improved uploadImage function with proper error handling and user ID check
-const uploadImage = async (req, res , next) => {
+
+const uploadImage = async (req, res, next) => {
   try {
-    const userId = req.params.id; // Check for ID in body or params
+    const userId = req.params.id; 
 
     if (req.is("multipart/form-data")) {
       if (!userId) {
@@ -336,20 +281,19 @@ const uploadImage = async (req, res , next) => {
         return res.status(404).json({ message: "User not found" });
       }
       const type = req.headers["type"];
-      saveImage(type, req, userUpdate , next);
+      saveImage(type, req, userUpdate, next);
 
       res.status(200).json({ message: "Image Uploaded" });
     }
   } catch (error) {
-    console.error("Backend error:", error);
-    res.status(500).json({ message: "Internal server error" }); // Generic error message for security
+    res.status(500).json({ message: "Internal server error" }); 
   }
 };
 
-const saveImage = async (type, req, user , next) => {
+const saveImage = async (type, req, user, next) => {
   let imageName = type + "-" + Date.now();
   const storage = multer.diskStorage({
-    destination: process.env.IMAGES_PATH, // Change this to your desired upload directory
+    destination: process.env.IMAGES_PATH, 
     filename: function (req, file, cb) {
       imageName += path.extname(file.originalname);
       type == "COVER"
@@ -360,8 +304,8 @@ const saveImage = async (type, req, user , next) => {
   });
 
   const upload = multer({ storage: storage });
-  // Handle image upload using Multer
-  upload.single("image")(req, next , async (err, uploadResult) => {});
+  
+  upload.single("image")(req, next, async (err, uploadResult) => {});
   await user.save();
 
   return { success: true, result: { message: "Image Added successfuly " } };
@@ -380,4 +324,4 @@ export {
   updateUserStatus,
   uploadImage,
   getImage,
-}; // Export as a named export
+}; 

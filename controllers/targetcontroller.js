@@ -30,7 +30,7 @@ const createTarget = async (req, res) => {
 
     await newTarget.save();
 
-    await handleSendNotif("created new target", req , res);
+    await handleSendNotif("created new target", req, res);
     // await createNotification({
     //   body: { status: "SENT", message: "created new taget", user: req.user },
     //   res,
@@ -51,14 +51,23 @@ const createTarget = async (req, res) => {
 const getTarget = async (req, res) => {
   console.log("getTarget");
   try {
-    const { start, end, page = 1, limit = 8, search, column, operator, value } = req.query;
+    const {
+      start,
+      end,
+      page = 1,
+      limit = 8,
+      search,
+      column,
+      operator,
+      value,
+    } = req.query;
 
     // Build search filter
     const searchFilter = {};
     if (search) {
       searchFilter.$or = [
-        { name: { $regex: search, $options: 'i' } }, // Case-insensitive partial match for Name
-        { type: { $regex: search, $options: 'i' } }, // Case-insensitive partial match for Type
+        { name: { $regex: search, $options: "i" } }, // Case-insensitive partial match for Name
+        { type: { $regex: search, $options: "i" } }, // Case-insensitive partial match for Type
       ];
     }
 
@@ -70,34 +79,47 @@ const getTarget = async (req, res) => {
 
     // Validate and apply column-based filtering (if all conditions are met)
     if (column && operator && value) {
-      const validColumns = ['name', 'type', 'emissionReduction'];
+      const validColumns = ["name", "type", "emissionReduction"];
       if (!validColumns.includes(column)) {
-        return res.status(400).json({ error: `Invalid column name: ${column}` });
+        return res
+          .status(400)
+          .json({ error: `Invalid column name: ${column}` });
       }
 
-      const validOperators = ['equals', 'startsWith', 'endsWith', 'contains', 'greaterThan', 'lessThan'];
+      const validOperators = [
+        "equals",
+        "startsWith",
+        "endsWith",
+        "contains",
+        "greaterThan",
+        "lessThan",
+      ];
       if (!validOperators.includes(operator)) {
         return res.status(400).json({ error: `Invalid operator: ${operator}` });
       }
 
       let filterExpression;
       switch (operator) {
-        case 'equals':
+        case "equals":
           filterExpression = { [column]: value };
           break;
-        case 'startsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`^${value}`, "i") } };
+        case "startsWith":
+          filterExpression = {
+            [column]: { $regex: new RegExp(`^${value}`, "i") },
+          };
           break;
-        case 'endsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`${value}$`, "i") } };
+        case "endsWith":
+          filterExpression = {
+            [column]: { $regex: new RegExp(`${value}$`, "i") },
+          };
           break;
-        case 'contains':
+        case "contains":
           filterExpression = { [column]: { $regex: new RegExp(value, "i") } };
           break;
-        case 'greaterThan':
+        case "greaterThan":
           filterExpression = { [column]: { $gt: value } };
           break;
-        case 'lessThan':
+        case "lessThan":
           filterExpression = { [column]: { $lt: value } };
           break;
         default:
@@ -118,7 +140,8 @@ const getTarget = async (req, res) => {
 
     const skip = (pageMin - 1) * limit; // Use pageMin for correct pagination
 
-    const targets = await target.find(searchFilter, {}) // Use searchFilter here
+    const targets = await target
+      .find(searchFilter, {}) // Use searchFilter here
       .skip(skip)
       .limit(limit);
 
@@ -128,217 +151,6 @@ const getTarget = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-/* const getTarget = async (req, res) => {
-  console.log("getTarget");
-  try {
-    const { start, end, page = 1, limit = 8, search, column, operator, value } = req.query;
-
-    // Build search filter
-    const searchFilter = {};
-    if (search) {
-      searchFilter.$or = [
-        { name: { $regex: search, $options: 'i' } }, // Case-insensitive partial match for Name
-        { type: { $regex: search, $options: 'i' } }, // Case-insensitive partial match for Type
-      ];
-    }
-
-    // Add date range filter (if both start and end are provided)
-    if (start && end) {
-      searchFilter.baseYear = { $gte: Number(start) };
-      searchFilter.targetYear = { $lte: Number(end) };
-    }
-
-    // Validate and apply column-based filtering (if all conditions are met)
-    if (column && operator && value) {
-      const validColumns = ['name', 'type', 'emissionReduction'];
-      if (!validColumns.includes(column)) {
-        return res.status(400).json({ error: `Invalid column name: ${column}` });
-      }
-
-      const validOperators = ['equals', 'startsWith', 'endsWith', 'contains', 'greaterThan', 'lessThan'];
-      if (!validOperators.includes(operator)) {
-        return res.status(400).json({ error: `Invalid operator: ${operator}` });
-      }
-
-      let filterExpression;
-      switch (operator) {
-        case 'equals':
-          filterExpression = { [column]: value };
-          break;
-        case 'startsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`^${value}`, "i") } };
-          break;
-        case 'endsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`${value}$`, "i") } };
-          break;
-        case 'contains':
-          filterExpression = { [column]: { $regex: new RegExp(value, "i") } };
-          break;
-        case 'greaterThan':
-          filterExpression = { [column]: { $gt: value } };
-          break;
-        case 'lessThan':
-          filterExpression = { [column]: { $lt: value } };
-          break;
-        default:
-          // Handle unsupported operators (if applicable)
-          break;
-      }
-
-      searchFilter.$and = searchFilter.$and || [];
-      searchFilter.$and.push(filterExpression);
-    }
-
-    console.log("searchFilter getTarget===>", searchFilter);
-
-    // Pagination and retrieval
-    const total = await target.countDocuments(searchFilter);
-    const totalPages = Math.ceil(total / limit);
-    const pageMin = Math.min(Math.max(page, 1), totalPages); // Clamp page between 1 and total pages
-
-    const skip = (pageMin - 1) * limit; // Use pageMin for correct pagination
-
-    const targets = await target.find(searchFilter, {}) // Use searchFilter here
-      .skip(skip)
-      .limit(limit);
-
-    res.json({ targets, total, pageMin, totalPages });
-  } catch (e) {
-    console.error("Error fetching targets:", e);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-/* const getTarget = async (req, res) => {
-  console.log("getTarget")
-  try {
-    const { start,end,page, limit, search,column, operator, value } = req.query;
-    const { start,end,page, limit, search,column, operator, value } = req.query;
-
-    const searchFilter = {
-      ...(search && {
-        $or: [
-          { name: { $regex: search, $options: "i" } }, // Case-insensitive partial match for Name
-          { type: { $regex: search, $options: "i" } }, // Case-insensitive partial match for Type
-        ],
-      }),
-      ...(start &&
-        end && {
-          baseYear: { $lte: Number(start) },
-          targetYear: { $gte: Number(end) },
-        }),
-    };
-    if (column && operator && value) {
-      // Validate column name (optional, based on your needs)
-      const validColumns = ['name', 'type', 'emissionReduction'];
-       if (!validColumns.includes(column)) {
-        return res.status(400).json({ error: `Invalid column name: ${column}` });
-      }  
-
-      // Validate operator (optional, based on your needs)
-      const validOperators = ['equals', 'startsWith', 'endsWith', 'contains', 'greaterThan', 'lessThan'];
-      if (!validOperators.includes(operator)) {
-        return res.status(400).json({ error: `Invalid operator: ${operator}` });
-      }
-
-      let filterExpression;
-      console.log("column,value", column, operator, value);
-      switch (operator) {
-        case 'equals':
-          filterExpression = { [column]: value };
-          break;
-        case 'startsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`^${value}`, "i") } };
-          break;
-        case 'endsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`${value}$`, "i") } };
-          break;
-        case 'contains':
-          filterExpression = { [column]: { $regex: new RegExp(value, "i") } };
-          break;
-        case 'greaterThan':
-          filterExpression =  
-       
-            { [column]: { $gt: value } };
-          break;
-        case 'lessThan':
-          filterExpression =  
-            { [column]: { $lt: value } };
-          break;
-        default:
-          // Handle unsupported operators (if applicable)
-          break;
-      }
-
-      filter.$and = filter.$and || []; // Create an $and array if it doesn't exist
-      filter.$and.push(filterExpression);
-    }
-    if (column && operator && value) {
-      // Validate column name (optional, based on your needs)
-      const validColumns = ['name', 'type', 'emissionReduction'];
-       if (!validColumns.includes(column)) {
-        return res.status(400).json({ error: `Invalid column name: ${column}` });
-      }  
-
-      // Validate operator (optional, based on your needs)
-      const validOperators = ['equals', 'startsWith', 'endsWith', 'contains', 'greaterThan', 'lessThan'];
-      if (!validOperators.includes(operator)) {
-        return res.status(400).json({ error: `Invalid operator: ${operator}` });
-      }
-
-      let filterExpression;
-      console.log("column,value", column, operator, value);
-      switch (operator) {
-        case 'equals':
-          filterExpression = { [column]: value };
-          break;
-        case 'startsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`^${value}`, "i") } };
-          break;
-        case 'endsWith':
-          filterExpression = { [column]: { $regex: new RegExp(`${value}$`, "i") } };
-          break;
-        case 'contains':
-          filterExpression = { [column]: { $regex: new RegExp(value, "i") } };
-          break;
-        case 'greaterThan':
-          filterExpression =  
-       
-            { [column]: { $gt: value } };
-          break;
-        case 'lessThan':
-          filterExpression =  
-            { [column]: { $lt: value } };
-          break;
-        default:
-          // Handle unsupported operators (if applicable)
-          break;
-      }
-
-      filter.$and = filter.$and || []; // Create an $and array if it doesn't exist
-      filter.$and.push(filterExpression);
-    }
-
-    console.log("searchFilter getTarget===>", searchFilter);
-    const total = await target.countDocuments(searchFilter);
-    const totalPages = Math.ceil(total / limit);
-    const pageMin = Math.min(Math.max(page, 1), totalPages); // Clamp page between 1 and total pages
-
-    const skip = (page - 1) * limit;
-
-    const targets = await target.find(searchFilter, {}) // Use searchFilter here
-      .skip(skip)
-      .limit(limit);
-      .skip(skip)
-      .limit(limit);
-
-    res.json({ targets, total, pageMin, totalPages });
-  } catch (e) {
-    return res.status(400).json({ error: "Internal Server Error" });
-  }
-}; */
-
 
 const updateTarget = async (req, res) => {
   try {
@@ -364,7 +176,7 @@ const updateTarget = async (req, res) => {
       return res.status(404).json({ error: "Target not found" });
     }
 
-    await handleSendNotif("Updated target", req , res);
+    await handleSendNotif("Updated target", req, res);
     res.json({
       _id: updatedTarget._id,
       type: updatedTarget.type,
@@ -379,12 +191,11 @@ const updateTarget = async (req, res) => {
 };
 
 const deleteTarget = async (req, res) => {
-
   const myTarget = await target.findById(req.params.id);
   if (myTarget) {
     //deletion of target consiste of deleting all tasks related to this target and checking if target was created by admin
     await target.deleteOne({ _id: myTarget._id });
-    await handleSendNotif("deleted target", req , res);
+    await handleSendNotif("deleted target", req, res);
     res.json({ message: "Target deleted" });
   } else {
     res.status(404).json({ error: "Target not found" });

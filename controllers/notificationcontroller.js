@@ -4,7 +4,6 @@ import user from "../models/userModel.js";
 
 export const createNotification = async (req, res) => {
   try {
-    // Create and save new notificatio
     const userid = req.user?._id || req.body.user._id;
     const currentUser = await user.findById(userid);
     const newNotif = new notification({ ...req.body, user: currentUser });
@@ -13,17 +12,17 @@ export const createNotification = async (req, res) => {
       message: "All users called created!",
       notification: newNotif,
     });
-    //res.status(201).json(newNotif);
   } catch (error) {
     console.log("message" + error.message);
-    //res.status(500).json({ error: error.message });
-    // next(createError(500, error.message));
   }
 };
 
 export const getAllNotificaitons = async (req, res) => {
   try {
-    const allNotifs = await notification.find({}).populate("user").sort({ created_at: 'asc' });
+    const allNotifs = await notification
+      .find({})
+      .populate("user")
+      .sort({ created_at: "asc" });
     res.status(200).json(allNotifs.reverse());
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -44,7 +43,7 @@ export const getNotification = async (req, res) => {
 export const updateNotification = async (req, res) => {
   try {
     const notif = await notification.findById(req.params.id);
-    //const myuser = await user.findById(req.params.id);
+
     if (notif) {
       notif.status = "SEEN";
       await notif.save();
@@ -61,8 +60,8 @@ export const updateBulkNotifications = async (req, res) => {
   try {
     await notification
       .updateMany(
-        { _id: { $in: req.body.notificationIds } }, // Filter
-        { $set: { status: "SEEN" } } // Update
+        { _id: { $in: req.body.notificationIds } },
+        { $set: { status: "SEEN" } }
       )
       .then((result) => {
         res.status(200).json({ message: "Notification Updated" });
@@ -74,10 +73,3 @@ export const updateBulkNotifications = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
-// export {
-//   updateNotification,
-//   getNotification,
-//   getAllNotificaitons,
-//   createNotification,
-// }

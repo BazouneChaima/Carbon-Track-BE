@@ -32,8 +32,8 @@ To get started with the Carbon Footprint Tracker app, follow the installation an
 
 1. **Clone the repository:**
     ```shell
-    git clone https://github.com/KelaiAffaf/Carbon-footprint-tracker.git
-    cd Carbon-footprint-tracker/server
+    git clone https://github.com/BazouneChaima/Carbon-Track-BE.git
+    cd Carbon-Track-BE
     ```
 
 2. **Install dependencies:**
@@ -43,11 +43,11 @@ To get started with the Carbon Footprint Tracker app, follow the installation an
 
 3. **Set up environment variables:**
     - Create a `.env` file in the root of the project directory.
-    - Add necessary environment variables such as database connection strings, JWT secret, etc.
+    - Add necessary environment variables such as database connection strings, JWT secret, etc (You can check exemple.env).
   
 4. **Start the server:**
     ```shell
-    npm start
+    nodemon index.js
     ```
 
 ## Usage
@@ -74,6 +74,7 @@ The Carbon Footprint Tracker app depends on the following packages:
 - `multer` for file uploading and handling
 - `nodemailer` for sending emails
 - `nodemon` for automatically restarting the server during development
+- `socketio` to manage notification
 
 ## Contributing
 

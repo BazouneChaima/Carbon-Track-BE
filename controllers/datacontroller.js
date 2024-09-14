@@ -25,10 +25,9 @@ const isEmpty = (obj) => {
   );
 };
 const uploadBatch = async (req, res) => {
-  //console.log(req.body[0]);
   const dataInput = req.body;
   try {
-    // Filter out empty objects
+    
     let filteredData = dataInput.filter((item) => !isEmpty(item));
     filteredData = filteredData.map((item) => {
       item["source"] = "Bulk Upload";
@@ -60,14 +59,14 @@ const getData = async (req, res) => {
     const searchFilter = {
       ...(search && {
         $or: [
-          { location: { $regex: search, $options: 'i' } }, // Case-insensitive partial match for location
-          { category: { $regex: search, $options: 'i' } }, // Case-insensitive partial match for category
+          { location: { $regex: search, $options: 'i' } }, 
+          { category: { $regex: search, $options: 'i' } }, 
         ],
       }),
       ...(startFullDate && endFullDate && {
         date: {
-          $gte: startFullDate, // Handle YYYY format
-          $lte: endFullDate, // Handle ISO 8601 format
+          $gte: startFullDate, 
+          $lte: endFullDate, 
         },
       }),
     };
@@ -103,7 +102,7 @@ const getData = async (req, res) => {
           filterExpression = { [column]: { $lt: value } };
           break;
         default:
-          // Handle unsupported operators (if applicable)
+          
           break;
       }
 
@@ -118,9 +117,9 @@ const getData = async (req, res) => {
     const pageMin = Math.min(Math.max(page, 1), totalPages);
     const skip = (page - 1) * limit;
 
-    const dataemission = await data.find(searchFilter, {}) // Use searchFilter here
-     // .skip(skip) // Uncomment if pagination is needed
-      //.limit(limit); // Uncomment if pagination is needed
+    const dataemission = await data.find(searchFilter, {}) 
+     
+      
 
     res.json({ dataemission, total, pageMin, totalPages });
   } catch (e) {
@@ -133,13 +132,13 @@ const getData = async (req, res) => {
  
 
 function convertISODateToEpoch(isoDate) {
-  // Handle potential ISO 8601 parsing errors
+  
   try {
     return new Date(isoDate).getTime();
   } catch (error) {
     console.error("Error parsing ISO 8601 date:", error);
-    // Handle the error appropriately, potentially returning a default value
-    return 0; // Or another suitable default
+    
+    return 0; 
   }
 }
  
@@ -147,17 +146,17 @@ function convertISODateToEpoch(isoDate) {
 const updateData = async (req, res) => {
   console.log("req.params.id" + req.params.id);
   try {
-    //Using findByIdAndUpdate simplifies the code by combining searching and updating into one operation.
+    
     const updatedData = await data.findOneAndUpdate(
       { _id: req.params.id },
-      req.body // The new: true option ensures you always get the latest version of the target in the response.
+      req.body 
     );
 
     if (!updatedData) {
       return res.status(404).json({ error: "Data not found" });
     }
     return res.status(200).json({ message: "Data updated successfuly" });
-    //res.json(updateData);
+    
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -168,9 +167,9 @@ const deleteData = async (req, res) => {
   console.log("here");
   try {
     const myData = await data.findById(req.params.id);
-    //console.log("my Data", myData);
+    
     if (myData) {
-      //deletion of target consiste of deleting all tasks related to this target and checking if target was created by admin
+      
       await data.deleteOne({ _id: myData._id });
       res.json({ message: "Data deleted" });
     } else {
@@ -183,15 +182,15 @@ const deleteData = async (req, res) => {
 };
 
 function convertDateToEpoch(date) {
-  // Handle potential errors and different date formats
+  
   console.log("ccc",date)
   try {
-    if (/^\d{4}$/.test(date)) { // Check for YYYY format
+    if (/^\d{4}$/.test(date)) { 
       console.log("new Date(date, 0, 1).getTime()",new Date(date, 0, 1))
       const dateFomrat = new Date(date, 0, 1); 
       const year = dateFomrat.getFullYear();
-  const month = String(dateFomrat.getMonth() + 1).padStart(2, '0'); // Pad month with leading zero if needed
-  const day = String(dateFomrat.getDate()).padStart(2, '0'); // Pad day with leading zero if needed
+  const month = String(dateFomrat.getMonth() + 1).padStart(2, '0'); 
+  const day = String(dateFomrat.getDate()).padStart(2, '0'); 
  
   return `${year}-${month}-${day}`;
     }   else {
@@ -199,8 +198,8 @@ function convertDateToEpoch(date) {
     }
   } catch (error) {
     console.error("Error converting date to epoch:", error);
-    // Handle the error appropriately, potentially returning a default value
-    return 0; // Or another suitable default
+    
+    return 0; 
   }
 }
 
@@ -213,8 +212,8 @@ function convertDateToEpoch(date) {
   const result = await Promise.all(
     rows.map(async (row) => {
       const { date, category, location } = row;
-      // console.log(parseInt(date));
-       // Ensure date is a string to avoid potential errors
+      
+       
        let formattedDate = null;
        if (date !== null) {
          formattedDate =  convertDateToEpoch((date));
@@ -223,9 +222,9 @@ function convertDateToEpoch(date) {
        }
        console.log('formattedDate',formattedDate,new Date(formattedDate))
       try {
-        // console.log('here'+i )
+        
         i++;
-        //console.log(date)
+        
         const emission = await data.findOne({
           source: { $ne: "Bulk Upload" },
           date:formattedDate,
@@ -251,21 +250,21 @@ function convertDateToEpoch(date) {
         }
       } catch (error) {
         console.log("errot" + error);
-        // res.status(500).send("Server error");
+        
       }
     })
   );
-  // console.log( result)
+  
   res.status(200).json({ message: "success", data: result });
 };    
 
  
 
 const formatYearToISO = (year) => {
-  // Create a Date object for January 1st of the given year
-  const date = new Date(Date.UTC(year, 0, 1, 0, 0, 2, 15)); // Month is 0-indexed in JS, so 0 is January
+  
+  const date = new Date(Date.UTC(year, 0, 1, 0, 0, 2, 15)); 
 
-  // Convert the Date object to ISO string format
+  
   const isoString = date.toISOString();
 
   return isoString;

@@ -39,11 +39,8 @@ const createReport = async (req, res) => {
 };
 
 const getReports = async (req, res) => {
-  console.log("calling getReports");
-
   try {
     const reportRoles = await report.find({});
-    console.log("repo", reportRoles);
     res.json(reportRoles);
   } catch (e) {
     return res.status(400).json({ error: "Internal Server Error" });
@@ -94,43 +91,13 @@ const saveImage = async (req, report, next) => {
   return { success: true, result: { message: "Image Added successfuly " } };
 };
 
-/* const createReport = async (req, res) => {
-  console.log("reposrtt",req)
-  try {
-    const newReport = new report({
-      name: req.body.name,
-      startDate: req.body.startDate,
-      endDate:req.body.endDate,
-      createdBy: req.body.createdBy,
-      createdAt:new Date(),
-      status:req.body.status || 'failed',
-      
-    });
-    console.log("newReport",newReport)
-    const savedReport = await newReport.save();
-
-    // Logic to generate and store the PDF file (replace with your implementation)
-    const pdfPath = "/public/report/" + savedReport._id + ".pdf";
-
-    savedReport.downloadURL = pdfPath;
-    await savedReport.save(); // Update report with download URL
-
-    res.status(201).json(savedReport); // Report created successfully
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error creating report" });
-  }
-}; */
-
 const deleteReport = async (req, res) => {
   const roleId = req.params.id;
-  console.log("report delete", roleId);
   try {
-    const deletedRole = await report.deleteOne({ _id: roleId });
+    await report.deleteOne({ _id: roleId });
 
     res.json({ message: "report deleted successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error deleting role", error: error });
   }
 };

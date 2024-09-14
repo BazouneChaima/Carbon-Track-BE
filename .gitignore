@@ -1,6 +1,10 @@
 
-node_modules
 
 
-# ignore the public folder
+# igonre env
+.env
+
+# Folders
 public
+node_modules
+Downloads

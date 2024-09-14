@@ -44,9 +44,6 @@ const createCompany = async (req, res, next) => {
 
     // Check if company already exists
     const existingCompany = await Company.findOne({ name });
-    /*   if (existingCompany) {
-      return next(createError(400, 'Company already exists'));
-    } */
 
     // Create and save new company
     const myCompany = new Company({
@@ -90,7 +87,6 @@ const addLocation = async (req, res, next) => {
     const companyExsit = await Company.findById(companyId);
     if (!companyExsit) {
       res.status(404).json({ error: "Company not found" });
-      // return next(createError(404, "Company not found"));
     }
 
     // Add new location to the company's locations array
@@ -101,7 +97,7 @@ const addLocation = async (req, res, next) => {
       postalCode,
       country,
     });
-    await handleSendNotif("created new location", req , res);
+    await handleSendNotif("created new location", req, res);
     await newLocation.save();
     companyExsit.locations.push(newLocation);
 
@@ -123,7 +119,6 @@ const getLocations = async (req, res, next) => {
 
     if (!company) {
       res.status(404).json({ error: "Company not found" });
-      // return next(createError(404, "Company not found"));
     }
 
     // Extract the locations array from the company
@@ -132,7 +127,6 @@ const getLocations = async (req, res, next) => {
     res.status(200).json({ locations: locations });
   } catch (error) {
     res.status(404).json({ error: error.message });
-    // next(createError(500, error.message));
   }
 };
 
@@ -145,7 +139,6 @@ const editLocation = async (req, res, next) => {
     const company = await Company.findById(companyId);
     if (!company) {
       res.status(404).json({ error: "Company not found" });
-      // return next(createError(404, "Company not found"));
     }
 
     // Find the location within the company by ID
@@ -154,7 +147,6 @@ const editLocation = async (req, res, next) => {
     );
     if (locationIndex === -1) {
       res.status(404).json({ error: "Location not found" });
-      // return next(createError(404, "Location not found"));
     }
 
     // Update the location with new data
@@ -170,7 +162,7 @@ const editLocation = async (req, res, next) => {
 
     // Save the updated company
     await company.save();
-    await handleSendNotif("edited location", req , res);
+    await handleSendNotif("edited location", req, res);
     res.status(200).json({ message: "Location updated successfully", company });
   } catch (error) {
     next(createError(500, error.message));
@@ -202,13 +194,12 @@ const deleteLocation = async (req, res, next) => {
 
     // Save the updated company
     await company.save();
-    await handleSendNotif("deleted location", req , res);
+    await handleSendNotif("deleted location", req, res);
     res.status(200).json({ message: "Location deleted successfully", company });
   } catch (error) {
     next(createError(500, error.message));
   }
 };
-
 
 const uploadImage = async (req, res, next) => {
   try {
@@ -224,7 +215,7 @@ const uploadImage = async (req, res, next) => {
 
     if (req.is("multipart/form-data")) {
       saveImage(req, company, next);
-      await handleSendNotif("uploaded new image for the company", req , res);
+      await handleSendNotif("uploaded new image for the company", req, res);
       res.status(200).json({ message: "Image Uploaded" });
     }
   } catch (error) {
@@ -269,7 +260,6 @@ const getImage = async (req, res) => {
     res.status(404).json({ message: "Image not found" });
   }
 };
-
 
 export {
   createCompany,
